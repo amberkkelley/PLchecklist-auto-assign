@@ -1,6 +1,6 @@
 // client.js
 
-trello.initialize({
+window.TrelloPowerUp.initialize({
   'card-buttons': function(t, options) {
     return [
       {
