@@ -5,9 +5,9 @@ window.TrelloPowerUp.initialize({
     return [
       {
         icon: 'https://cdn-icons-png.flaticon.com/512/1828/1828817.png',
-        text: 'Assign Checklist Tasks',
+        text: 'Pre-Listing Checklist Tasks',
         callback: async function(t) {
-          const checklistName = "Pre Listing Checklist";
+          const checklistName = "Pre-Listing Checklist";
 
           const card = await t.card('id', 'members', 'customFieldItems');
           const board = await t.board('customFields');
@@ -18,11 +18,11 @@ window.TrelloPowerUp.initialize({
           const assignedMembers = card.members.map(m => m.id);
 
           let checklistId;
-          const existingChecklists = await t.checklists('all');
-          const existing = existingChecklists.find(cl => cl.name === checklistName);
+          const checklistResponse = await t.getRestApi().get(`/cards/${card.id}/checklists`);
+          const existing = checklistResponse.find(cl => cl.name === checklistName);
 
           if (!existing) {
-            const created = await t.post(`/cards/${card.id}/checklists`, {
+            const created = await t.getRestApi().post(`/cards/${card.id}/checklists`, {
               name: checklistName
             });
             checklistId = created.id;
@@ -73,24 +73,22 @@ window.TrelloPowerUp.initialize({
           ];
 
           for (const task of tasks) {
-            const due = liveDate ? new Date(liveDate.getTime() + task.dueOffset * 24 * 60 * 60 * 1000) : null;
-            const checkItem = await t.api(`/checklists/${checklistId}/checkItems`, {
-              method: 'post',
-              body: { name: task.name, pos: 'bottom' }
+            const due = liveDate ? new Date(liveDate.getTime() + task.dueOffset * 86400000) : null;
+            const result = await t.getRestApi().post(`/checklists/${checklistId}/checkItems`, {
+              name: task.name,
+              pos: 'bottom'
             });
 
-            if (due) {
-              await t.api(`/cards/${card.id}/checkItem/${checkItem.id}`, {
-                method: 'put',
-                body: { due: due.toISOString() }
+            const checkItemId = result.id;
+            const memberId = task.member === "Agent" ? assignedMembers[0] : memberMap[task.member];
+            if (memberId) {
+              await t.getRestApi().put(`/cards/${card.id}/checkItem/${checkItemId}/assign`, {
+                value: memberId
               });
             }
-
-            const memberId = memberMap[task.member];
-            if (memberId && assignedMembers.includes(memberId)) {
-              await t.api(`/cards/${card.id}/checkItem/${checkItem.id}/members`, {
-                method: 'post',
-                body: { value: memberId }
+            if (due) {
+              await t.getRestApi().put(`/cards/${card.id}/checkItem/${checkItemId}/due`, {
+                value: due.toISOString()
               });
             }
           }
