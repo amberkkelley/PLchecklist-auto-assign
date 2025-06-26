@@ -1,0 +1,22 @@
+{
+  "name": "Checklist Auto Assign",
+  "id": "com.amberkkelley.plchecklistautoassign",
+  "apiVersion": 1,
+  "author": "Amber Kelley",
+  "description": "Automatically assign checklist items based on due date and member.",
+  "public": true,
+  "iframeConnectorUrl": "https://amberkkelley.github.io/PLchecklist-auto-assign/",
+  "capabilities": {
+    "card-buttons": [
+      {
+        "text": "Run Auto Assign",
+        "callback": "functionRunAutoAssign"
+      }
+    ]
+  },
+  "connectors": {
+    "iframe": {
+      "url": "index.html"
+    }
+  }
+}
